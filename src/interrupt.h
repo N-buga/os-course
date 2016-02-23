@@ -3,6 +3,12 @@
 
 #include <stdint.h>
 
+void switch_off();
+void initialize_serial();
+void initialize_pit();
+void initialize_pic();
+void create_idt();
+
 struct idt_ptr {
 	uint16_t size;
 	uint64_t base;
@@ -12,12 +18,12 @@ static inline void set_idt(const struct idt_ptr *ptr)
 { __asm__ volatile ("lidt (%0)" : : "a"(ptr)); }
 
 struct Descriptor {
-	uint32_t reserved;
-	uint32_t offset_high;
-	uint16_t offset_mid;
-	uint16_t config;
-	uint16_t segmentSelector;
 	uint16_t offset_low;	 
+	uint16_t segment_selector;
+	uint16_t config;
+	uint16_t offset_mid;
+	uint32_t offset_high;
+	uint32_t reserved;
 } __attribute__((packed));
 
 #endif /*__INTERRUPT_H__*/

@@ -1,10 +1,5 @@
 #include "interrupt.h"
-
-void switch_off();
-void initial_ioport();
-void initial_timer();
-void initial_interrupt();
-void creat_idt();
+#include "ioport.h"
 
 extern struct Descriptor ptr[32 + 16];
 
@@ -12,15 +7,18 @@ struct idt_ptr idtr;
 
 void main(void)
 { 
-	switch_off();	
-	while (1); 
-	initial_ioport();
-	initial_timer();
-	initial_interrupt();
+	prints("In main\n");
+	__asm__("cli");
+	initialize_serial();
+	initialize_pit();
+	initialize_pic();
 	create_idt();
 
-	idtr.base = (uint64_t)&ptr;
-	idtr.size = 32;
+	idtr.base = (uint64_t)ptr;
+	idtr.size = sizeof(struct idt_ptr) * 33 - 1;;
 
 	set_idt(&idtr);	
+	__asm__("sti");
+
+	while (1) {}
 }

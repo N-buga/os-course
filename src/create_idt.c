@@ -1,18 +1,21 @@
 #include "interrupt.h"
 #include "memory.h"
+#include "ioport.h"
+
+void outer_serial();
 
 struct Descriptor ptr[32 + 16];
 
-extern void procedure_serial();
-
 void create_idt() {	
-	uint64_t proc_long = (uint64_t) &procedure_serial;
+
+	printc(100);
+	uint64_t serial_long = (uint64_t) &outer_serial;
 	ptr[32].reserved = 0;
-	ptr[32].offset_high = (proc_long >> 32);
-	ptr[32].offset_mid = (proc_long >> 16) % (1 << 16);
-	ptr[32].offset_low = proc_long % (1 << 16);
-	ptr[32].segmentSelector = KERNEL_CODE;
-	ptr[32].config = 0b1110111000000000;
+	ptr[32].offset_high = (serial_long >> 32);
+	ptr[32].offset_mid = (serial_long >> 16) & 0xffff;
+	ptr[32].offset_low = serial_long & 0xffff;
+	ptr[32].segment_selector = KERNEL_CODE;
+	ptr[32].config = 0xee00;   //0b1110 1110 0000 0000;
 	
 	return;		
 }
