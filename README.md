@@ -1,5 +1,4 @@
 # os-course
-mit.spbau.ru OS course materials
 
 1. create_idt.c - creates idt with 32 + 16 raws. Timer interrupt is described by 33th raw(32th if we're counting with null).
 2. initialize_pic.c - initializes interrupt controller.
