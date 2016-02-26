@@ -7,7 +7,6 @@ struct idt_ptr idtr;
 
 void main(void)
 { 
-	prints("In main\n");
 	__asm__("cli");
 	initialize_serial();
 	initialize_pit();
@@ -17,7 +16,11 @@ void main(void)
 	idtr.base = (uint64_t)ptr;
 	idtr.size = sizeof(struct idt_ptr) * 33 - 1;;
 
+	prints("In main\n");
+
 	set_idt(&idtr);	
+
+	prints("\naa!\n");
 	__asm__("sti");
 
 	while (1) {}
