@@ -5,7 +5,7 @@ void initialize_pit() {
 	out8(0x40, 0x30); // devizor
 	out8(0x40, 0x00);	
 	
-	printc(98);
+//	printc(98);
 
 	return;
 }

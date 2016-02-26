@@ -13,12 +13,12 @@ void set_descriptor(int i, uint64_t address) {
 	ptr[i].offset_mid = (address >> 16) & 0xffff;
 	ptr[i].offset_low = address & 0xffff;
 	ptr[i].segment_selector = KERNEL_CODE;
-	ptr[i].config = 0x8e00;   //0b1110 1110 0000 0000;	
+	ptr[i].config = 0xee00;   //0b1110 1110 0000 0000;	
 }
 
 void create_idt() {	
 
-	printc(100);
+//	printc(100);
 	uint64_t timer_handler = (uint64_t) &outer_serial;
 	uint64_t other_handler = (uint64_t) &other_outer;
 	set_descriptor(32, timer_handler); 

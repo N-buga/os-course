@@ -14,13 +14,10 @@ void main(void)
 	create_idt();
 
 	idtr.base = (uint64_t)ptr;
-	idtr.size = sizeof(struct idt_ptr) * 33 - 1;;
-
-	prints("In main\n");
+	idtr.size = sizeof(ptr) - 1;;
 
 	set_idt(&idtr);	
 
-	prints("\naa!\n");
 	__asm__("sti");
 
 	while (1) {}

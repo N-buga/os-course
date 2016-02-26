@@ -27,7 +27,7 @@ void initialize_serial() {
 	out8(0x3f8 + 3, 0x3);	// to switch the write/read mode
 	out8(0x3a8 + 5, (1 << 5)); //be allowed to write next bite
 
-	printc(0x61);
+//	printc(0x61);
 
 	return;
 }

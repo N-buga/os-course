@@ -15,7 +15,7 @@ void initialize_pic() {
 	out8(0x21, 0x01); // 0b0000 0001
 	out8(0xA1, 0x01); // 0b00000001
 
-	printc(99);
+//	printc(99);
 	
 	return;
 }
