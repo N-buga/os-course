@@ -10,3 +10,8 @@ int main()
 	return 0;
 }
 
+
+	mov %rbp, %rsp
+	push %rbp
+	pop %rbp
+

@@ -2,6 +2,7 @@
 .global other_outer
 
 other_outer:
+	cli
 	push %rax
 	push %rcx
 	push %rdx
@@ -10,7 +11,6 @@ other_outer:
 	push %rbp
 	push %rsi
 	push %rdi
-	mov %rbp, %rsp
 	call other_inner
 	pop %rdi
 	pop %rsi
@@ -20,4 +20,5 @@ other_outer:
 	pop %rdx
 	pop %rcx
 	pop %rax
+	sti
 	iretq

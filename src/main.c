@@ -12,7 +12,7 @@ void main(void)
 	initialize_pit();
 	initialize_pic();
 	create_idt();
-
+	
 	idtr.base = (uint64_t)ptr;
 	idtr.size = sizeof(ptr) - 1;;
 

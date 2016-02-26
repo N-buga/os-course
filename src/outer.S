@@ -10,7 +10,6 @@ outer_serial:
 	push %rbp
 	push %rsi
 	push %rdi
-	mov %rbp, %rsp
 	call inner_serial
 	pop %rdi
 	pop %rsi
