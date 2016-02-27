@@ -1,7 +1,7 @@
-.extern other_inner
-.global other_outer
+.extern other_inner_master
+.global other_outer_master
 
-other_outer:
+other_outer_master:
 	cli
 	push %rax
 	push %rcx
@@ -11,7 +11,7 @@ other_outer:
 	push %rbp
 	push %rsi
 	push %rdi
-	call other_inner
+	call other_inner_master
 	pop %rdi
 	pop %rsi
 	pop %rbp
