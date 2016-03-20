@@ -11,7 +11,7 @@ ASM := bootstrap.S videomem.S outer.S other_outer_slave.S other_outer_master.S h
 AOBJ:= $(ASM:.S=.o)
 ADEP:= $(ASM:.S=.d)
 
-SRC := main.c initialize_pit.c inner.c other_inner_master.c other_inner_slave.c hardware_inner.c initialize_serial.c initialize_pic.c create_idt.c 
+SRC := main.c get_memory_map.c initialize_pit.c inner.c other_inner_master.c other_inner_slave.c hardware_inner.c initialize_serial.c initialize_pic.c create_idt.c 
 OBJ := $(AOBJ) $(SRC:.c=.o)
 DEP := $(ADEP) $(SRC:.c=.d)
 

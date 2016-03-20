@@ -13,6 +13,49 @@ void prints(char* x) {
 	} 
 }
 
+void print32(uint32_t x) {
+	if (x == 0) { printc('0'); return; }
+	char number[10];
+	int j = 0; 
+	while (x > 0) {
+		number[j++] = (x % 10) + '0';
+		x = x/10;
+	}
+	for (int i = (j - 1); i >= 0; i--) {
+		printc(number[i]);
+	}	
+}
+
+void print64(uint64_t x) {
+	if (x == 0) { printc('0'); return; }
+	char number[20];
+	int j = 0; 
+	while (x > 0) {
+		number[j++] = (x % 10) + '0';
+		x = x/10;
+	}
+	for (int i = (j - 1); i >= 0; i--) {
+		printc(number[i]);
+	} 
+}
+
+void print64_x(uint64_t x) {
+	if (x == 0) { printc('0'); return; }
+	char number[20];
+	int j = 0; 
+	while (x > 0) {
+		if (x%16 <= 9) {
+			number[j++] = (x % 16) + '0'; 
+		} else {
+			number[j++] = 'a' + (x % 16) - 10;
+		}
+		x = x/16;
+	}
+	for (int i = (j - 1); i >= 0; i--) {
+		printc(number[i]);
+	} 
+}
+
 void initialize_serial() {
 
 	out8(0x3f8 + 5, 0x0); //to reset 5-th bit(be not allowed to write the next bite);

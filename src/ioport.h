@@ -38,5 +38,8 @@ static inline uint32_t in32(unsigned short port)
 
 void printc(uint8_t x);
 void prints(char* x);
+void print32(uint32_t);
+void print64(uint64_t);
+void print64_x(uint64_t x);
 
 #endif /* __IOPORT_H__ */
