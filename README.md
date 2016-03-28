@@ -9,3 +9,4 @@
 7. src/other_inner.c - inner function-handler for another interrupts. Is called by other_outer-function.
 8. src/other_outer.S - function-handler for another interrupts.
 9. src/outer.S - function-handler for timer interrupt.
+10. src/get_memory_map.c - contains two function: print_mmap to print memory map and insert_kernel to insert the kernel memory 
