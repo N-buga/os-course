@@ -63,8 +63,6 @@ int insert_kernel() {
 	struct Memory_descriptor mem_map[50];
 	uint32_t count = 0;
 	
-	prints("before:\n");
-	
 	while(1) {
 		uint32_t* mmap_addr_ptr = (uint32_t*) ((uint64_t) mmap_addr_value);
 		uint32_t size = mmap_addr_ptr[0];
@@ -83,16 +81,7 @@ int insert_kernel() {
 		mem_map[count].is_eval = 1;
 		
 		count++;		
-				
-		print64(base_addr);
-		prints(" - ");
-		print64(base_addr + length);
-		prints("  --  ");
-		if (type == 1) {
-			prints("available\n");
-		} else {
-			prints("reserved\n");
-		}
+
 		mmap_addr_value += 4 + size;
 		if (mmap_addr_value >= mmap_begin_addr_value + mmap_length)
 			break;

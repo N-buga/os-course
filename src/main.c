@@ -23,8 +23,11 @@ void main(void)
 	__asm__("sti");
 */
 	initialize_serial();
-	insert_kernel();
+	prints("before inserting information about kernel:\n");
 	print_mmap();
-	
+	insert_kernel();
+	prints("after inserting information about kernel:\n");
+	print_mmap();	
+
 	while (1) {}
 }
