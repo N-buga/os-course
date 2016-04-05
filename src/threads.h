@@ -24,5 +24,4 @@ struct thread_pool {
 pid_t create_thread(void* (*fptr)(void *), void *arg);
 void init_thread_pool();
 void join(pid_t id_thread);
-
-
+void schedule();
