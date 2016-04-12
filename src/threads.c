@@ -109,3 +109,23 @@ void exit_thread() {
 	__asm__("sti");	
 }
 
+void exit_given_thread(pid_t thread) {
+	__asm__("cli");
+	thread_pool.threads[thread].state = STOP;
+	thread_pool.next_running_thread[thread_pool.prev_running_thread[thread]] = thread_pool.next_running_thread[thread];
+	thread_pool.prev_running_thread[thread_pool.next_running_thread[thread]] = thread_pool.prev_running_thread[thread];
+	schedule();
+	__asm__("sti");	
+}
+
+void stop(pid_t id_thread) {
+	exit_given_thread(id_thread);
+	printf("After stop %d thread\n", id_thread);
+}
+
+void yield() {
+	__asm__("cli");
+	schedule();
+	__asm__("sti");
+}
+

@@ -6,17 +6,11 @@
 
 void schedule();
 
-void scheduler() {
-	__asm__("cli");
-	schedule();
-	__asm__("sti");	
-}
-
 void* print_a(void* a) {
 	(void) a;
 	for (int i = 0; i < 12; i++) {
 		prints("a ");
-		scheduler();
+		yield();
 	}
 	prints("end_of_func_a\n");
 	return a;
@@ -26,7 +20,7 @@ void* print_w(void* w) {
 	(void) w;
 	for (int i = 0; i < 2; i++) {
 		prints("w ");
-		scheduler();
+		yield();
 	}
 	prints("end_of_func_w\n");
 	return w;
@@ -36,10 +30,20 @@ void* print_b(void* b) {
 	(void) b;
 	for (int i = 0; i < 12; i++) {
 		prints("b ");
-		scheduler();
+		yield();
 	}
 	prints("end_of_func_b");
 	return b;
+}
+
+void* long_print_t(void* t) {
+	(void) t;
+	int a = 0;
+	while(1 == 1) {
+		a += 1;
+		if (a % 1000 == 0) prints("t ");
+	}
+	return t;
 }
 
 struct lock_descriptor lock_test;
@@ -49,7 +53,7 @@ void* print_a_lock(void* a) {
 		(void) a;
 		for (int i = 0; i < 4; i++) {
 			prints("a ");
-			scheduler();	
+			yield();	
 		}
 		prints("end_of_func_a\n");
 	unlock(&lock_test);
@@ -61,7 +65,7 @@ void* print_b_lock(void* b) {
 		(void) b;
 		for (int i = 0; i < 4; i++) {
 			prints("b ");
-			scheduler();
+			yield();
 		}
 		prints("end_of_func_b\n");
 	unlock(&lock_test);	
@@ -102,4 +106,11 @@ void test_join() {
 	pid_t id = create_thread(&print_w, (void*) 0);
 	join(id);
 	prints("after_join\n");
+}
+
+void test_stop() {
+	pid_t id = create_thread(&long_print_t, (void*) 0);
+	printf("Stop test is thred %d\n", id);
+	yield();
+	stop(id);
 }

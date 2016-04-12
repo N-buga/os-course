@@ -25,3 +25,5 @@ pid_t create_thread(void* (*fptr)(void *), void *arg);
 void init_thread_pool();
 void join(pid_t id_thread);
 void schedule();
+void stop(pid_t id_thread);
+void yield();

@@ -51,6 +51,7 @@ void main(void)
 	test_simple_lock();
 	test_join();
 	test_argument();
+	test_stop();
 	
 	while (1) {}
 }
