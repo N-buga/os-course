@@ -17,8 +17,7 @@ struct Init_data {
         void* start_thread_addr;
         void* fun_addr;
         void* arg;	
-};// __attribute__((packed));
-
+};
 int switch_threads(void **old_sp, void *new_sp);
 struct thread_state* get_next_schedule_thread();
 
@@ -58,11 +57,8 @@ struct thread_state* get_next_schedule_thread() {
 
 pid_t create_thread(void* (*fptr)(void *), void *arg) {
 	__asm__("cli");
-	
-//	prints("create_thread\n");
-	
+		
 	pid_t new_thread = head_free;
-//	printf("new_thread %d ", head_free); 
 	head_free = thread_pool.next_free_thread[head_free];
 	thread_pool.next_free_thread[thread_pool.prev_free_thread[new_thread]] = thread_pool.next_free_thread[new_thread];
 	thread_pool.prev_free_thread[thread_pool.next_free_thread[new_thread]] = thread_pool.prev_free_thread[new_thread];
@@ -83,23 +79,14 @@ pid_t create_thread(void* (*fptr)(void *), void *arg) {
    	ptr_data->fun_addr = fptr;
      	ptr_data->arg = arg;
      	
-//     	printf("arg2 %lld\n", (long long) arg); 
-
     	thread_pool.threads[new_thread].state = RUNNING;
     	
-  //  	printf(" %d \n", cur_thread);
     	int next_cur_thread = thread_pool.next_running_thread[cur_thread];
-    //	printf(" %d \n", next_cur_thread);
     	thread_pool.next_running_thread[cur_thread] = new_thread;
     	thread_pool.prev_running_thread[next_cur_thread] = new_thread;
     	thread_pool.prev_running_thread[new_thread] = cur_thread;
     	thread_pool.next_running_thread[new_thread] = next_cur_thread;
     	
-//    	for (int i = thread_pool.next_running_thread[cur_thread]; i != cur_thread; i = thread_pool.next_running_thread[i]) {
-  //  		printf("| %d \n", i);	
-    //	}
-    	//prints("\n");
-
     	__asm__("sti");
     	return new_thread;				
 }
@@ -115,7 +102,6 @@ void join(pid_t id_thread) {
 
 void exit_thread() {
 	__asm__("cli");
-//	prints("0000000");
 	thread_pool.threads[cur_thread].state = STOP;
 	thread_pool.next_running_thread[thread_pool.prev_running_thread[cur_thread]] = thread_pool.next_running_thread[cur_thread];
 	thread_pool.prev_running_thread[thread_pool.next_running_thread[cur_thread]] = thread_pool.prev_running_thread[cur_thread];
