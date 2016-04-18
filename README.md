@@ -25,4 +25,4 @@ I use the official solution.
 
 #Task4
 1.src/file_system.c - function of file system
-2.src/test_file_system.c - tests for function from src/file_systev.c
+2.src/test_file_system.c - tests for function from src/file_system.c
