@@ -11,7 +11,7 @@ ASM := bootstrap.S start_thread.S switcher.S videomem.S outer.S other_outer_slav
 AOBJ:= $(ASM:.S=.o)
 ADEP:= $(ASM:.S=.d)
 
-SRC := main.c ctype.c console.c io.c balloc.c list.c error.c string.c \
+SRC := main.c test_file_system.c file_system.c ctype.c console.c io.c balloc.c list.c error.c string.c \
  initialize_pit.c misc.c threads.c tests.c locks.c kmem_cache.c memory.c \
  paging.c inner.c other_inner_master.c other_inner_slave.c hardware_inner.c \
  initialize_serial.c initialize_pic.c create_idt.c 

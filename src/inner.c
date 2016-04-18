@@ -17,8 +17,8 @@ void inner_serial() {
 //		prints("Hello!");
 //		printf("%d %d\n", cur_thread, jeffies);
 	} else {
-		prints("---------\n");
-		printf("%d %d\n", cur_thread, jeffies);
+//		prints("---------\n");
+//		printf("%d %d\n", cur_thread, jeffies);
 		jeffies = 0;
 		schedule();
 	}

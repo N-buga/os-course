@@ -24,8 +24,8 @@ struct thread_state* get_next_schedule_thread();
 void schedule() {
 	int old_thread = cur_thread;
 	struct thread_state* next_state = get_next_schedule_thread();
-	printf("cur_thread %d \n", cur_thread);
-	printf("%p\n", next_state->ptr_stack);
+//	printf("cur_thread %d \n", cur_thread);
+//	printf("%p\n", next_state->ptr_stack);
 	if (next_state != thread_pool.threads + old_thread) {
 		switch_threads(&(thread_pool.threads[old_thread].ptr_stack), next_state->ptr_stack);
 	}

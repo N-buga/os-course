@@ -8,6 +8,7 @@
 #include "threads.h"
 #include "kmem_cache.h"
 #include "tests.h"
+#include "test_file_system.h"
 
 extern struct Descriptor ptr[32 + 16];
 
@@ -47,11 +48,19 @@ void main(void)
 	
 	__asm__("sti");
 
-	test_simple();	
-	test_simple_lock();
-	test_join();
-	test_argument();
-	test_stop();
+//	test_simple();	
+//	test_simple_lock();
+//	test_join();
+//	test_argument();
+//	test_stop();
+	prints("--------------\n");
+	testRoot();
+	prints("----------\n");
+	testCreate();
+	prints("----------\n");
+	testReadWrite();
+	prints("-----------\n");
+	testFileByPath();
 	
 	while (1) {}
 }

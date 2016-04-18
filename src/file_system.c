@@ -5,9 +5,10 @@
 #include "memory.h"
 
 int maxID  = 0;
+struct iNode* root;
 
 struct iNode* init() {
-	struct iNode* root = kmem_alloc(sizeof(struct iNode));
+	root = kmem_alloc(sizeof(struct iNode));
 	root->id = maxID++;
 	root->name = "root";
 	root->isDirectory = 1;
@@ -75,62 +76,61 @@ struct iNode* mkdir(char* name, struct iNode* curDirectory) {
 }
 
 int equals(char* s1, char* s2) {
-	while (*s1 != 0 && *s2 != 0) {
-		if (*s1 != *s2) {
+	int ptr = 0;
+	while (s1[ptr] != 0 && s2[ptr] != 0) {
+		if (s1[ptr] != s2[ptr]) {
 			return 0;
 		}
+		ptr++;
 	}
-	if (*s1 == *s2) {
+	if (s1[ptr] == s2[ptr]) {
 		return 1;
 	}
 	return 0;
 }
 
-/*struct iNode* nextDirectory(struct iNode* curDirectory, char* name) {
+struct iNode* takeFile(char* name, struct iNode* curDirectory) {
 	if (curDirectory->isDirectory == 0) {
 		prints("This isn't directory\n");
 		return NULL;
 	}
 	struct iList* curNode = curDirectory->files;
 	while (curNode != NULL) {
-		if (equals(curNode->curFile->name, name) && curNode->curFile->isDirectory == 1) {
+		if (equals(curNode->curFile->name, name)) {
 			break;
 		}
 		curNode = curNode->nextFile;
 	}	
-	struct iNode* result;
 	if (curNode == NULL) {
-		result = create(name, curDirectory);
-	} else {
-		result = curNode->curFile;
+		prints("Can't find file\n");
+		return NULL;
 	}
-	result->isOpened = 1;
-	return result;
-} 
+	return curNode->curFile;
+}
 
-struct iList* openDir(char* path) {
-	iNode* curDirectory = root;
+struct iNode* takeFileByPath(char* path) {
+	struct iNode* curFile = root;
 	int size = 0;
-	while (path[size] != 0)
+	while (path[size] != 0) {
 		size++;
-	char* pathNextDirectory = (char*) kmem_alloc(size);
-	int curPositionPath = 0;
-	int curPositionPathNextDirectory = 0;
-	while (path[curPositionPath] != 0) {	
-		if (path[curPositionPath] != '/') {
-			pathNextDirectory[curPositionPathNextDirectory++] = path[curPositionPath++];
+	}
+	char* nextFile = (char*)kmem_alloc(size + 1);
+	int ptrPath = 0;
+	int ptrNextFile = 0;
+	while (path[ptrPath] != 0) {
+		if (path[ptrPath] != '/') {
+			nextFile[ptrNextFile++] = path[ptrPath++];
 		} else {
-			pathNextDirectory[curPositionPathNextDirectory++] = 0;
-			curDirectory = nextDirectory(curDirectory, pathNextDirectory);
-			curPositionPathNextDirectory = 0;	
-			curPositionPath++;		
+			nextFile[ptrNextFile++] = 0;
+			curFile = takeFile(nextFile, curFile);
+			ptrNextFile = 0;
+			ptrPath++;	
 		}
 	}
-	pathNextDirectory[curPositionPathNextDirectory] = 0;
-	curDirectory = nextDirectory(curDirectory, pathNextDirectory);
-	return curDirectory->files;	
+	nextFile[ptrNextFile++] = 0;
+	curFile = takeFile(nextFile, curFile);
+	return curFile;
 }
-*/
 
 struct iNode* open(char* name, struct iNode* curDirectory) {
 	if (curDirectory->isDirectory == 0) {
