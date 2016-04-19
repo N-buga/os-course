@@ -22,3 +22,8 @@ I use the official solution.
 5. src/start_thread.S - wrapper of function of thread
 2. src/tests.c - tests for pthreads
 3. src/io.c - function printf
+
+#Task4
+1.src/file_system.c - function of file system
+
+2.src/test_file_system.c - tests for function from src/file_system.c
