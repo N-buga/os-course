@@ -142,6 +142,7 @@ static inline void *page_addr(struct page *page)
 
 void setup_memory(void);
 void setup_buddy(void);
+void reserve_initfarms(void); 
 
 #endif /*__ASM_FILE__*/
 

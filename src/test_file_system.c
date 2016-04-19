@@ -5,6 +5,8 @@
 void testRoot() {
 	struct iNode* root = init();
 	readDir(root);	
+	struct iNode* test = takeFileByPath("test");
+	readDir(test);
 }
 
 void testCreate() {

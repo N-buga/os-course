@@ -37,6 +37,7 @@ void main(void)
 	
 	setup_misc();
 	setup_memory();
+	reserve_initfarms();
 	setup_buddy();
 	setup_paging();
 	setup_alloc();

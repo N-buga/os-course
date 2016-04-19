@@ -28,3 +28,4 @@ struct iNode* open(char* name, struct iNode* curDirectory);
 void write(struct iNode* file, int offset, int len, char* buf);
 char* read(struct iNode* file, int offset, int len);
 struct iNode* takeFileByPath(char* path);
+void extract();

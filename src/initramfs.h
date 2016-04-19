@@ -8,6 +8,8 @@
 #define S_ISDIR(mode)	(((mode) & S_IFMT) == S_IFDIR)
 #define S_ISREG(mode)	(((mode) & S_IFMT) == S_IFREG)
 
+#define MY_ALIGN(offset)  (offset = (((offset-1)/4) + 1)*4);      
+
 #define END_OF_ARCHIVE	"TRAILER!!!"
 
 struct cpio_header {

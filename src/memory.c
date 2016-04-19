@@ -5,14 +5,25 @@
 #include "balloc.h"
 #include "stdio.h"
 #include "misc.h"
+#include "multiboot.h"
+#include "initramfs.h"
 
 #define MAX_MEMORY_NODES (1 << PAGE_NODE_BITS)
 
+extern const uint32_t mboot_info;
 static struct memory_node nodes[MAX_MEMORY_NODES];
 static int memory_nodes;
 static LIST_HEAD(node_order);
 static struct list_head *node_type[NT_COUNT];
+phys_t cpio_begin = NULL;
+phys_t cpio_end = NULL;
 
+struct module_structure {
+	uint32_t mod_start;
+	uint32_t mod_end;
+	char string[4];
+	uint32_t reserved;
+} __attribute__((packed));	
 
 struct memory_node *memory_node_get(int id)
 { return &nodes[id]; }
@@ -173,6 +184,52 @@ void setup_memory(void)
 			(unsigned long long) kernel_begin,
 			(unsigned long long) kernel_end - 1);
 	balloc_reserve_region(kernel_begin, kernel_end - kernel_begin);
+}
+
+int equals6(char* a, char* b) {
+	for (int i = 0; i < 6; i++) {
+		if (a[i] != b[i]) {
+			return 0;
+		}
+	}
+	return 1;
+}
+
+void reserve_initfarms(void) 
+{
+	struct multiboot_info* info = (struct multiboot_info*) (uint64_t) mboot_info;
+	uint32_t flags = info->flags;
+	if (flags && (1 << 3) == 0) {
+		printf("Flag isn't okey\n");
+		return;
+	}
+	
+	uint32_t mods_count = info->mods_count;
+	struct module_structure* mods_addr = (struct module_structure*) (uint64_t)info->mods_addr;
+	
+	char magic_number[6] = "070701";
+	for (uint32_t i = 0; i < mods_count; i++) {
+		if (mods_addr[i].mod_end - mods_addr[i].mod_start >= sizeof(struct cpio_header)) {
+			printf("Size id okey\n");
+			struct cpio_header* mod_header = (struct cpio_header*)(uint64_t)mods_addr->mod_start; 
+			for (int i = 0; i < 6; i++) {
+				printf("%c", mod_header->magic[i]);
+			}
+			printf("\n");
+			if (equals6(mod_header->magic, magic_number)) {
+				printf("We find!");
+				cpio_begin = mods_addr[i].mod_start;
+				cpio_end = mods_addr[i].mod_end;
+				printf("%d %d\n", cpio_begin, cpio_end);
+				break;		
+			} 
+		}
+	}
+	
+	if (cpio_begin == 0 || cpio_end == 0) 
+		return;
+	balloc_add_region(cpio_begin, cpio_end);
+	balloc_reserve_region(cpio_begin, cpio_end);	
 }
 
 void setup_buddy(void)
