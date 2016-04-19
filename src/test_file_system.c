@@ -24,13 +24,15 @@ void testOutLoadedTree() {
 void testContainLoadFiles() {
 	struct iNode* curFile = takeFileByPath("src/test/a.txt");
 	char buf[100];
+	if (curFile == NULL) {
+		return;
+	}
 	printf("curFile.size = %d\n", curFile->size);
 	int count = read(curFile, 0, curFile->size, buf);
 	printf("%d\n", count);
 	for (int i = 0; i < count; i++) {
 		printf("%c", buf[i]);
 	}		
-	printf("\n");
 }
 
 void testRoot() {

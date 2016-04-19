@@ -4,8 +4,11 @@
 #include "ioport.h"
 #include "memory.h"
 #include "initramfs.h"
+#include "locks.h"
 
 #pragma GCC diagnostic ignored "-Wstack-usage="
+
+struct lock_descriptor file_system_lock;
 
 int maxID  = 0;
 struct iNode* root;
@@ -89,7 +92,6 @@ uint32_t size(char* s) {
 }
 
 void extract() {
-	printf("%d %d\n", (uint32_t) cpio_begin, (uint32_t) cpio_end);
 	phys_t cur_descriptor = VA(cpio_begin);
 	int offset = 0;
 	while (VA(cpio_end) - cur_descriptor >= sizeof(struct cpio_header)) 
@@ -104,7 +106,7 @@ void extract() {
 		for (uint32_t i = 0; i < name_size; i++) {
 			full_path[i] = name[i];
 		}
-//		full_path[name_size] = 0;
+		full_path[name_size] = 0;
 		char path_to_parent[name_size + 10];
 		char* file_name = (char*) kmem_alloc(name_size);
 		find_parent(file_name, path_to_parent, full_path);
@@ -112,20 +114,19 @@ void extract() {
 		struct iNode* directory = takeFileByPath(path_to_parent);
 
 		offset += sizeof(struct cpio_header) + name_size;
-//		printf("offset_before = %d, ", offset);
 		MY_ALIGN(offset);
-//		printf("offset = %d , size_of_data_first = %c, size_of_data_end = %c\n", offset, header->filesize[0], header->filesize[7]);
+		
+		uint32_t size_of_data = str16_to_int(header->filesize, 8);
 		
 		if (S_ISDIR(str16_to_int(header->mode, 8))) {
 			mkdir(file_name, directory);
+			offset += size_of_data;
+			MY_ALIGN(offset);
 			cur_descriptor = VA(cpio_begin) + offset;
 		} else {
-			uint32_t size_of_data = str16_to_int(header->filesize, 8);
 			if (S_ISREG(str16_to_int(header->mode, 8))) {
 				struct iNode* file = create(file_name, directory);
-				uint8_t* buf = (uint8_t*) (cur_descriptor + offset);
-//				printf("first character = %c, %d, second character = %c, %d; %c, %d; %c, %d; %c, %d\n", 
-//				(char)buf[0], buf[0], (char)buf[1], buf[1], (char)buf[2], buf[2], (char)buf[3], buf[3], (char)buf[4], buf[4]);
+				uint8_t* buf = (uint8_t*) (VA(cpio_begin) + offset);
 				write(file, 0, size_of_data, (char*)buf);
 			} 	
 			offset += size_of_data;
@@ -144,7 +145,9 @@ void readDir(struct iNode* curDirectory) {
 		prints("This isn't directory\n");
 		return;
 	}
+	lock(&file_system_lock);
 	struct iList* curFileNode = curDirectory->files;
+	unlock(&file_system_lock);
 	while (curFileNode != NULL) {
 		prints(curFileNode->curFile->name);
 		printf(" %d", curFileNode->curFile->isDirectory);
@@ -161,7 +164,10 @@ struct iList* nextDir(struct iList* curFile) {
 }
 
 struct iList* openDir(struct iNode* curDir) {
-	return curDir->files;
+	lock(&file_system_lock);
+	struct iList* result = curDir->files;
+	unlock(&file_system_lock);
+	return result;
 }
 
 int isDir(struct iList* curDir) {
@@ -173,6 +179,7 @@ struct iNode* create(char* name, struct iNode* curDirectory) {
 		prints("This isn't directory\n");
 		return NULL;
 	}
+	lock(&file_system_lock);
 	struct iList* firstFile = curDirectory->files;
 	struct iNode* newFile = (struct iNode*) kmem_alloc(sizeof(struct iNode));
 	newFile->id = maxID++;
@@ -188,6 +195,7 @@ struct iNode* create(char* name, struct iNode* curDirectory) {
 	newNode->nextFile = firstFile;
 	newNode->curFile = newFile;
 	curDirectory->files = newNode;
+	unlock(&file_system_lock);
 	return newFile;
 }
 
@@ -196,6 +204,7 @@ struct iNode* mkdir(char* name, struct iNode* curDirectory) {
 		prints("This isn't directory\n");
 		return NULL;
 	}
+	lock(&file_system_lock);
 	struct iList* firstFile = curDirectory->files;
 	struct iNode* newDirectory = (struct iNode*) kmem_alloc(sizeof(struct iNode));
 	newDirectory->id = maxID++;
@@ -208,7 +217,7 @@ struct iNode* mkdir(char* name, struct iNode* curDirectory) {
 	newNode->nextFile = firstFile;
 	newNode->curFile = newDirectory;
 	curDirectory->files = newNode;
-	
+	unlock(&file_system_lock);
 	return newDirectory;
 }
 
@@ -234,7 +243,9 @@ struct iNode* takeFile(char* name, struct iNode* curDirectory) {
 		prints("This isn't directory\n");
 		return NULL;
 	}
+	lock(&file_system_lock);
 	struct iList* curNode = curDirectory->files;
+	unlock(&file_system_lock);
 	while (curNode != NULL) {
 		if (equals(curNode->curFile->name, name)) {
 			break;
@@ -242,7 +253,7 @@ struct iNode* takeFile(char* name, struct iNode* curDirectory) {
 		curNode = curNode->nextFile;
 	}	
 	if (curNode == NULL) {
-		prints("Can't find file\n");
+		printf("Can't find file %s\n", name);
 		return NULL;
 	}
 	return curNode->curFile;
@@ -266,6 +277,10 @@ struct iNode* takeFileByPath(char* path) {
 		} else {
 			nextFile[ptrNextFile++] = 0;
 			curFile = takeFile(nextFile, curFile);
+			if (curFile == NULL) {
+				printf("Can't find path %s\n", path); 
+				return NULL;
+			}
 			ptrNextFile = 0;
 			ptrPath++;	
 		}
@@ -283,7 +298,9 @@ struct iNode* open(char* name, struct iNode* curDirectory) {
 		prints("This isn't directory\n");
 		return NULL;
 	}
+	lock(&file_system_lock);
 	struct iList* curNode = curDirectory->files;
+	unlock(&file_system_lock);
 	while (curNode != NULL) {
 		if (equals(curNode->curFile->name, name) && curNode->curFile->isDirectory == 0) {
 			break;
@@ -301,6 +318,10 @@ struct iNode* open(char* name, struct iNode* curDirectory) {
 } 
 
 void write(struct iNode* file, uint32_t offset, uint32_t len, char* buf) {
+	if (file == NULL) {
+		printf("Can't write to file NULL");
+		return;
+	}
 	if (file->isDirectory == 1) {
 		prints("This file is directory\n");
 		return;
@@ -323,6 +344,7 @@ void write(struct iNode* file, uint32_t offset, uint32_t len, char* buf) {
 		curNode = curNode->nextMemList;
 		signedOffset -= PAGE_SIZE;	
 	}
+	lock(&file_system_lock);
 	char* writePointer = (char*)curNode->curMemory;	
 	int curMemoryOffset = offset;
 	for (uint32_t i = 0; i < len; i++) {
@@ -338,9 +360,14 @@ void write(struct iNode* file, uint32_t offset, uint32_t len, char* buf) {
 			curMemoryOffset = 0;
 		}
 	}
+	unlock(&file_system_lock);
 }
 
 int read(struct iNode* file, uint32_t offset, uint32_t len, char* buf) {
+	if (file == NULL) {
+		prints("Can't read from file NULL");
+		return 0;
+	}
 	if (file->isDirectory == 1) {
 		prints("This file is directory");
 		return 0;
@@ -362,10 +389,12 @@ int read(struct iNode* file, uint32_t offset, uint32_t len, char* buf) {
 	
 	char* readPointer = (char*)curNode->curMemory;	
 	uint32_t curMemoryOffset = offset;
+	lock(&file_system_lock);
 	for (uint32_t i = 0; i < len; i++) {
 		buf[i] = readPointer[curMemoryOffset++];
 		if (curMemoryOffset == PAGE_SIZE) {
 			if (curNode->nextMemList == NULL) {
+				unlock(&file_system_lock);
 				return i;
 			}
 			curNode = curNode->nextMemList;
@@ -373,6 +402,7 @@ int read(struct iNode* file, uint32_t offset, uint32_t len, char* buf) {
 			curMemoryOffset = 0;
 		}
 	}
+	unlock(&file_system_lock);
 	return len;
 }
 
