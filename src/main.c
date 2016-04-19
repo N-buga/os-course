@@ -8,6 +8,7 @@
 #include "threads.h"
 #include "kmem_cache.h"
 #include "tests.h"
+#include "file_system.h"
 #include "test_file_system.h"
 
 extern struct Descriptor ptr[32 + 16];
@@ -20,6 +21,8 @@ void inner_serial();
 void initialize_serial();
 void initialize_pit();
 void initialize_pic();
+
+struct iNode* root;
 
 
 void main(void)
@@ -46,7 +49,8 @@ void main(void)
 	idtr.size = sizeof(ptr) - 1;;
 
 	set_idt(&idtr);	
-	
+
+	root = init();	
 	__asm__("sti");
 
 //	test_simple();	
@@ -54,6 +58,10 @@ void main(void)
 //	test_join();
 //	test_argument();
 //	test_stop();
+	prints("-------------\n");
+	testOutLoadedTree();
+	prints("-------------\n");
+	testContainLoadFiles();
 	prints("--------------\n");
 	testRoot();
 	prints("----------\n");

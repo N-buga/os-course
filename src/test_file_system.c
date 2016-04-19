@@ -1,16 +1,45 @@
 #include "file_system.h"
 #include "io.h"
 #include "ioport.h"
+#include<stddef.h>
+
+struct iNode* root;
+
+void printTree(struct iNode* curNode, int level) {
+	for (int i = 0; i < level; i++) {
+		printf("|");
+	}
+	printf("%s\n", curNode->name);
+	struct iList* curListNode = curNode->files;
+	while (curListNode != NULL) {
+		printTree(curListNode->curFile, level + 1);
+		curListNode = nextDir(curListNode);
+	}
+}
+
+void testOutLoadedTree() {
+	printTree(root, 0);	
+}
+
+void testContainLoadFiles() {
+	struct iNode* curFile = takeFileByPath("src/test/a.txt");
+	char buf[100];
+	printf("curFile.size = %d\n", curFile->size);
+	int count = read(curFile, 0, curFile->size, buf);
+	printf("%d\n", count);
+	for (int i = 0; i < count; i++) {
+		printf("%c", buf[i]);
+	}		
+	printf("\n");
+}
 
 void testRoot() {
-	struct iNode* root = init();
-	readDir(root);	
+	readDir(root);
 	struct iNode* test = takeFileByPath("test");
 	readDir(test);
 }
 
 void testCreate() {
-	struct iNode* root = init();
 	create("file", root);
 	mkdir("directory", root);
 	create("aaaa", root);
@@ -19,11 +48,11 @@ void testCreate() {
 }
 
 void testReadWrite() {
-	struct iNode* root = init();
 	struct iNode* file = create("file", root);
 	char* buf = "cat";
 	write(file, 0, 3, buf);
-	char* result = read(file, 0, 3);
+	char result[4];
+	read(file, 0, 3, result);
 	for (int i = 0; i < 3; i++) {
 		printc(result[i]);
 	}
@@ -31,7 +60,6 @@ void testReadWrite() {
 }
 
 void testFileByPath() {
-	struct iNode* root = init();
 	struct iNode* inDir1 = mkdir("dir1", root);
 	struct iNode* inDir2 = mkdir("dir2", inDir1);
 	char* path = "dir1/dir2";

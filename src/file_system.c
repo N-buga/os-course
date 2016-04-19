@@ -94,15 +94,9 @@ void extract() {
 	int offset = 0;
 	while (VA(cpio_end) - cur_descriptor >= sizeof(struct cpio_header)) 
 	{
-		printf("cur_difference: %lu %lu, %lu\n", VA(cpio_end), cur_descriptor, VA(cpio_end) - cur_descriptor);
 		struct cpio_header* header = (struct cpio_header*) cur_descriptor;
 		uint32_t name_size = str16_to_int((char*) header->namesize, 8);
-		printf("name_size: %u\n", name_size);
 		char* name = (char*)(header + 1);
-		for (uint32_t i = 0; i < name_size; i++) {
-			printf("%c", name[i]);
-		}
-		printf("\n");
 		if (equals_size(name, "TRAILER!!!", 10)) {
 			break;
 		}
@@ -110,22 +104,17 @@ void extract() {
 		for (uint32_t i = 0; i < name_size; i++) {
 			full_path[i] = name[i];
 		}
-		full_path[name_size] = 0;
+//		full_path[name_size] = 0;
 		char path_to_parent[name_size + 10];
 		char* file_name = (char*) kmem_alloc(name_size);
 		find_parent(file_name, path_to_parent, full_path);
 		
-		printf("full_path: %s\n", full_path);
-		printf("file_name: %s\n", file_name);
-		printf("path_to_parent: %s\n", path_to_parent);
-		
-		printf("path_to_parent.size = %u\n", size(path_to_parent));
 		struct iNode* directory = takeFileByPath(path_to_parent);
 
-		printf("findInode: %p\n", directory);
-		
 		offset += sizeof(struct cpio_header) + name_size;
+//		printf("offset_before = %d, ", offset);
 		MY_ALIGN(offset);
+//		printf("offset = %d , size_of_data_first = %c, size_of_data_end = %c\n", offset, header->filesize[0], header->filesize[7]);
 		
 		if (S_ISDIR(str16_to_int(header->mode, 8))) {
 			mkdir(file_name, directory);
@@ -134,8 +123,10 @@ void extract() {
 			uint32_t size_of_data = str16_to_int(header->filesize, 8);
 			if (S_ISREG(str16_to_int(header->mode, 8))) {
 				struct iNode* file = create(file_name, directory);
-				char* buf = (char*) (cur_descriptor + offset);
-				write(file, 0, size_of_data, buf);
+				uint8_t* buf = (uint8_t*) (cur_descriptor + offset);
+//				printf("first character = %c, %d, second character = %c, %d; %c, %d; %c, %d; %c, %d\n", 
+//				(char)buf[0], buf[0], (char)buf[1], buf[1], (char)buf[2], buf[2], (char)buf[3], buf[3], (char)buf[4], buf[4]);
+				write(file, 0, size_of_data, (char*)buf);
 			} 	
 			offset += size_of_data;
 			MY_ALIGN(offset);
@@ -145,6 +136,10 @@ void extract() {
 }
 
 void readDir(struct iNode* curDirectory) {
+	if (curDirectory == NULL) {
+		printf("you try to find NULL\n");
+		return;
+	}
 	if (curDirectory->isDirectory == 0) {
 		prints("This isn't directory\n");
 		return;
@@ -156,6 +151,21 @@ void readDir(struct iNode* curDirectory) {
 		prints("\n");
 		curFileNode = curFileNode->nextFile;
 	}
+}
+
+struct iList* nextDir(struct iList* curFile) {
+	if (curFile != NULL) {
+		return curFile->nextFile;
+	}
+	return NULL;
+}
+
+struct iList* openDir(struct iNode* curDir) {
+	return curDir->files;
+}
+
+int isDir(struct iList* curDir) {
+	return curDir->curFile->isDirectory;
 }
 
 struct iNode* create(char* name, struct iNode* curDirectory) {
@@ -171,8 +181,9 @@ struct iNode* create(char* name, struct iNode* curDirectory) {
 	newFile->files = NULL;
 	newFile->isOpened = 0;
 	newFile->memory = (struct MemoryList*) kmem_alloc(sizeof(struct MemoryList));
-	newFile->memory->nextMemList = NULL;
-	newFile->memory->curMemory = kmem_alloc(PAGE_SIZE);
+	newFile->size = 0;
+	struct MemoryList* curMemory = newFile->memory;
+	curMemory->curMemory = kmem_alloc(PAGE_SIZE);
 	struct iList* newNode = (struct iList*) kmem_alloc(sizeof(struct iList));
 	newNode->nextFile = firstFile;
 	newNode->curFile = newFile;
@@ -216,6 +227,9 @@ int equals(char* s1, char* s2) {
 }
 
 struct iNode* takeFile(char* name, struct iNode* curDirectory) {
+	if (curDirectory == NULL) {
+		return NULL;
+	}
 	if (curDirectory->isDirectory == 0) {
 		prints("This isn't directory\n");
 		return NULL;
@@ -258,6 +272,9 @@ struct iNode* takeFileByPath(char* path) {
 	}
 	nextFile[ptrNextFile++] = 0;
 	curFile = takeFile(nextFile, curFile);
+	if (curFile == NULL) {
+		printf("We can't find file with name = %s\n", nextFile);
+	}
 	return curFile;
 }
 
@@ -283,28 +300,32 @@ struct iNode* open(char* name, struct iNode* curDirectory) {
 	return result;
 } 
 
-void write(struct iNode* file, int offset, int len, char* buf) {
+void write(struct iNode* file, uint32_t offset, uint32_t len, char* buf) {
 	if (file->isDirectory == 1) {
-		prints("This file is directory");
+		prints("This file is directory\n");
 		return;
+	}
+	if (file->size < (uint32_t)offset + len) {
+		file->size = offset + len;
 	}
 	struct MemoryList* curNode = file->memory;
 	if (curNode == NULL) {
-		prints("You do something wrong!");
+		prints("You do something wrong!\n");
 		return;
 	}
-	while (offset - PAGE_SIZE >= 0) {
+	long long signedOffset = offset;
+	while (signedOffset - PAGE_SIZE >= 0) {
 		if (curNode->nextMemList == NULL) {
 			curNode->nextMemList = (struct MemoryList*) kmem_alloc(sizeof(struct MemoryList));
 			curNode->nextMemList->nextMemList = NULL;
 			curNode->nextMemList->curMemory = kmem_alloc(PAGE_SIZE);
 		}
 		curNode = curNode->nextMemList;
-		offset -= PAGE_SIZE;	
+		signedOffset -= PAGE_SIZE;	
 	}
 	char* writePointer = (char*)curNode->curMemory;	
 	int curMemoryOffset = offset;
-	for (int i = 0; i < len; i++) {
+	for (uint32_t i = 0; i < len; i++) {
 		writePointer[curMemoryOffset++] = buf[i];
 		if (curMemoryOffset == PAGE_SIZE) {
 			if (curNode->nextMemList == NULL) {
@@ -319,38 +340,39 @@ void write(struct iNode* file, int offset, int len, char* buf) {
 	}
 }
 
-char* read(struct iNode* file, int offset, int len) {
+int read(struct iNode* file, uint32_t offset, uint32_t len, char* buf) {
 	if (file->isDirectory == 1) {
 		prints("This file is directory");
-		return NULL;
+		return 0;
 	}
 	struct MemoryList* curNode = file->memory;
 	if (curNode == NULL) {
 		prints("You do something wrong!");
-		return NULL;
+		return 0;
 	}
-	while (offset - PAGE_SIZE >= 0) {
+	long long signedOffset = offset;
+	while (signedOffset - PAGE_SIZE >= 0) {
+		printf("offset = %lld, page_size = %u\n", signedOffset, PAGE_SIZE); 
 		if (curNode->nextMemList == NULL) {
-			return NULL;	
+			return 0;	
 		}
 		curNode = curNode->nextMemList;
-		offset -= PAGE_SIZE;	
+		signedOffset -= PAGE_SIZE;	
 	}
+	
 	char* readPointer = (char*)curNode->curMemory;	
-	int curMemoryOffset = offset;
-	char* result = (char*) kmem_alloc(len);
-	for (int i = 0; i < len; i++) {
-		result[i] = readPointer[curMemoryOffset++];
+	uint32_t curMemoryOffset = offset;
+	for (uint32_t i = 0; i < len; i++) {
+		buf[i] = readPointer[curMemoryOffset++];
 		if (curMemoryOffset == PAGE_SIZE) {
 			if (curNode->nextMemList == NULL) {
-				kmem_free((void*) result);
-				return NULL;
+				return i;
 			}
 			curNode = curNode->nextMemList;
 			readPointer = curNode->curMemory;
 			curMemoryOffset = 0;
 		}
 	}
-	return result;
+	return len;
 }
 

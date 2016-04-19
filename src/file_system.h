@@ -1,5 +1,5 @@
 #include <sys/types.h>
-#define NULL 0
+#include <stdint.h>
 
 struct iNode {
 	pid_t id;
@@ -7,6 +7,7 @@ struct iNode {
 	int isDirectory;
 	struct iList* files;
 	int isOpened;
+	uint32_t size;
 	struct MemoryList* memory;	
 };
 
@@ -25,7 +26,8 @@ void readDir(struct iNode* curDirectory);
 struct iNode* create(char* name, struct iNode* curDirectory);
 struct iNode* mkdir(char* name, struct iNode* curDirectory);
 struct iNode* open(char* name, struct iNode* curDirectory);
-void write(struct iNode* file, int offset, int len, char* buf);
-char* read(struct iNode* file, int offset, int len);
+void write(struct iNode* file, uint32_t offset, uint32_t len, char* buf);
+int read(struct iNode* file, uint32_t offset, uint32_t len, char* buf);
 struct iNode* takeFileByPath(char* path);
 void extract();
+struct iList* nextDir(struct iList* curFile);
