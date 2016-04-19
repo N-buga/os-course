@@ -293,7 +293,10 @@ struct iNode* takeFileByPath(char* path) {
 	return curFile;
 }
 
-struct iNode* open(char* name, struct iNode* curDirectory) {
+struct iNode* open_from_directory(char* name, struct iNode* curDirectory) {
+	if (curDirectory == NULL) {
+		prints("Cur directory is NULL\n");
+	}
 	if (curDirectory->isDirectory == 0) {
 		prints("This isn't directory\n");
 		return NULL;
@@ -313,8 +316,35 @@ struct iNode* open(char* name, struct iNode* curDirectory) {
 	} else {
 		result = curNode->curFile;
 	}
+	lock(&file_system_lock);
+	if (result->isOpened == 0) {
+		printf("File %s is already opened\n", name);
+		unlock(&file_system_lock);
+		return NULL;
+	}
+	unlock(&file_system_lock);
 	result->isOpened = 1;
 	return result;
+}
+
+int close(struct iNode* file) {
+	if (file == NULL) {
+		prints("Can't close NULL ptr on file\n");
+		return 0;
+	}
+	if (file->isDirectory) {
+		printf("File %s is directory\n", file->name);
+		return 0;
+	}
+	lock(&file_system_lock);
+	if (file->isOpened == 1) {
+		printf("File %s is already opened\n", file->name);
+		unlock(&file_system_lock);
+		return 0;
+	}
+	file->isOpened = 0;
+	unlock(&file_system_lock);
+	return 1;
 } 
 
 void write(struct iNode* file, uint32_t offset, uint32_t len, char* buf) {
