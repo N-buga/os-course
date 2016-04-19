@@ -24,6 +24,6 @@ I use the official solution.
 3. src/io.c - function printf
 
 #Task4
-1.src/file_system.c - function of file system
-
-2.src/test_file_system.c - tests for function from src/file_system.c
+1. src/file_system.c - function of file system, and extern() - unzip cpio.
+2. src/test_file_system.c - tests for function from src/file_system.c
+3. src/memory.c - function reserve_initfarms() for reserve place of initfarms()
